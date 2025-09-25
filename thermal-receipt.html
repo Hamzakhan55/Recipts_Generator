@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thermal Receipt Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f0f0f0; 
+            padding: 20px; 
+            display: flex;
+            flex-direction: column;
+            gap: 30px; 
+        }
+        
+        .form-panel { 
+            width: 100%; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .item-row { display: grid; grid-template-columns: 3fr 1fr 1.5fr 1fr 1.5fr 1.5fr 1.5fr; gap: 0; margin-bottom: 5px; }
+        .item-row input { padding: 8px; border: 1px solid #ddd; border-radius: 0; font-size: 12px; margin-right: 1px; }
+        .item-row input:last-child { margin-right: 0; }
+        .item-gst-amount, .item-price-incl, .item-total { background: #f5f5f5; }
+        
+        button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px 5px 5px 0; }
+        button:hover { background: #0056b3; }
+        .btn-add { background: #28a745; }
+        .btn-print { background: #17a2b8; }
+        
+        .receipt-container { display: flex; justify-content: center; }
+        
+        .thermal-receipt {
+            width: 80mm;
+            background: white;
+            padding: 5mm;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 1.2;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            color: black;
+        }
+        
+        .receipt-header { text-align: center; border-bottom: 1px dashed black; padding-bottom: 8px; margin-bottom: 8px; }
+        .store-logo { max-width: 150px; height: auto; margin: 0 auto 5px auto; display: block; }
+        .store-name { font-weight: bold; font-size: 14px; margin-bottom: 3px; }
+        .store-info { font-size: 9px; line-height: 1.1; margin-bottom: 2px; }
+        
+        .receipt-meta-box { 
+            border: 1px solid black; 
+            padding: 6px;
+            font-size: 9px;
+        }
+        
+        .meta-row { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 1px;
+        }
+        
+        .items-header { 
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+            font-weight: bold; 
+            font-size: 8px; 
+            margin-bottom: 5px;
+            border: 1px solid black;
+            text-align: center;
+        }
+        
+        .items-header div {
+            border-right: 1px solid black;
+            padding: 6px;
+        }
+        
+        .items-header div:last-child {
+            border-right: none;
+        }
+        
+        .item-line { 
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+            font-size: 8px;
+            padding: 1px 2px;
+            text-align: right;
+        }
+        
+        .item-line div:first-child {
+            text-align: center;
+        }
+        
+        .item-name-cell { 
+            font-weight: bold; 
+            word-wrap: break-word;
+            line-height: 1.1;
+        }
+        
+        .item-qty-cell, .item-rate-cell, .item-amt-cell {
+            text-align: right;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        .totals-section { 
+            border-top: 1px dashed black; 
+            padding-top: 5px; 
+            margin-top: 8px; 
+        }
+        
+        .total-line { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 2px; }
+        .totals-section .total-line span:last-child { text-align: right; min-width: 80px; }
+        .final-total { font-weight: bold; font-size: 12px; border-top: 1px solid black; padding-top: 3px; margin-top: 3px; }
+        
+        .receipt-footer { text-align: center; font-size: 9px; margin-top: 10px; border-top: 1px dashed black; padding-top: 5px; }
+        
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .form-panel { display: none; }
+            .receipt-container { margin: 0; padding: 0; }
+            .thermal-receipt { box-shadow: none; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-panel">
+        <h2>Thermal Receipt Generator</h2>
+        
+        <div class="form-group">
+            <label>Store Logo:</label>
+            <input type="file" id="logoInput" accept="image/*">
+        </div>
+        
+        <div class="form-group">
+            <label>Store Name:</label>
+            <input type="text" id="storeName" value="PANJPIR LAR, JEHANGIRA ROAD, SWABI">
+        </div>
+        
+        <div class="form-group">
+            <label>Contact:</label>
+            <input type="text" id="storeContact" value="CONTACT: 0310 986 80 01">
+        </div>
+        
+        <div class="form-group">
+            <label>NTN Number:</label>
+            <input type="text" id="ntnNumber" value="NTN # 6950400-6">
+        </div>
+        
+        <div class="form-group">
+            <label>STRN Number:</label>
+            <input type="text" id="strnNumber" value="STRN # 3277876256701">
+        </div>
+        
+        <div class="form-group">
+            <label>Cashier:</label>
+            <input type="text" id="cashier" value="M. USMAN">
+        </div>
+        
+        <div class="form-group">
+            <label>Shift:</label>
+            <input type="text" id="shift" value="MOR">
+        </div>
+        
+        <div class="form-group">
+            <label>Terminal:</label>
+            <input type="text" id="terminal" value="0177">
+        </div>
+        
+        <div class="form-group">
+            <label>NET:</label>
+            <input type="text" id="net" value="002">
+        </div>
+        
+        <div class="form-group">
+            <label>Date:</label>
+            <input type="date" id="receiptDate">
+        </div>
+        
+        <div class="form-group">
+            <label>Time:</label>
+            <input type="time" id="receiptTime">
+        </div>
+        
+        <div class="form-group">
+            <label>Items:</label>
+            <div style="font-size: 12px; margin-bottom: 5px; display: grid; grid-template-columns: 3fr 1fr 1.5fr 1fr 1.5fr 1.5fr 1.5fr; gap: 0; font-weight: bold; background: #f8f9fa; padding: 10px; border: 1px solid #ddd;">
+                <span style="padding: 0 8px;">Item Name</span>
+                <span style="padding: 0 8px; text-align: center;">Qty</span>
+                <span style="padding: 0 8px; text-align: center;">Price Excl GST</span>
+                <span style="padding: 0 8px; text-align: center;">GST %</span>
+                <span style="padding: 0 8px; text-align: center;">GST Amount</span>
+                <span style="padding: 0 8px; text-align: center;">Price Incl GST</span>
+                <span style="padding: 0 8px; text-align: center;">Total</span>
+            </div>
+            <div id="itemsList">
+                <div class="item-row">
+                    <input type="text" class="item-name" placeholder="Item name" value="SAMPLE PRODUCT">
+                    <input type="number" class="item-qty" value="1" min="1" step="0.01">
+                    <input type="number" class="item-price-excl" value="100.00" step="0.01">
+                    <input type="number" class="item-gst-percent" value="18" step="0.01">
+                    <input type="number" class="item-gst-amount" readonly>
+                    <input type="number" class="item-price-incl" readonly>
+                    <input type="number" class="item-total" readonly>
+                </div>
+            </div>
+            <button type="button" class="btn-add" onclick="addItem()">Add Item</button>
+        </div>
+        
+        <button onclick="generateReceipt()">Generate Receipt</button>
+        <button class="btn-print" onclick="printReceipt()">Print Receipt</button>
+    </div>
+    
+    <div class="receipt-container">
+        <div class="thermal-receipt" id="receipt">
+            <div class="receipt-header">
+                <img id="logoDisplay" class="store-logo" style="display: none;">
+                <div class="store-name" id="storeNameDisplay">PANJPIR LAR, JEHANGIRA ROAD, SWABI</div>
+                <div class="store-info" id="storeContactDisplay">CONTACT: 0310 986 80 01</div>
+                <div class="store-info">
+                    <span id="ntnDisplay">NTN # 6950400-6</span> ; <span id="strnDisplay">STRN # 3277876256701</span>
+                </div>
+            </div>
+            
+            <div class="receipt-meta-box">
+                <div class="meta-row">
+                    <span id="billDate"></span>
+                    <span id="billTime"></span>
+                    <span>Cashier: <span id="cashierDisplay">M. USMAN</span></span>
+                </div>
+                <div class="meta-row">
+                    <span>Shift: <span id="shiftDisplay">MOR</span></span>
+                    <span id="terminalDisplay">0177</span>
+                    <span>NET: <span id="netDisplay">002</span></span>
+                </div>
+            </div>
+            
+            <div class="items-header">
+                <div>QTY</div>
+                <div>PRICE<br>EXCL GST</div>
+                <div>GST<br>%</div>
+                <div>GST<br>AMOUNT</div>
+                <div>PRICE<br>INCL GST</div>
+                <div>TOTAL<br>AMOUNT</div>
+            </div>
+            
+            <div id="itemsDisplay">
+                <!-- Items will be displayed here -->
+            </div>
+            
+            <div class="totals-section">
+                <div style="display: flex; margin-top: 5px;">
+                    <div style="width: 25%; font-size: 9px; padding-top: 15px;">
+                        <div>ITEMS <span id="itemCount">0</span></div>
+                    </div>
+                    <div style="width: 75%;">
+                        <div style="border: 1px solid black; margin-bottom: 2px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 2px 5px;">
+                                <span>TOTAL EXCL.</span>
+                                <span id="totalExcl">0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 2px 5px; border-bottom: 1px solid black;">
+                                <span>GST TOTAL</span>
+                                <span id="gstTotal">0.00</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 9px; padding: 2px 5px;">
+                                <span>SUB Total</span>
+                                <span id="subTotal">0.00</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin: 2px 0;">
+                            <span>GRAND</span>
+                            <span id="grandTotal">0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; margin: 1px 0;">
+                            <span>PAYMENT CASH</span>
+                            <span id="paymentCash">0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; margin: 1px 0;">
+                            <span>CHANGE</span>
+                            <span id="change">0.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center; font-size: 8px; margin-top: 5px; line-height: 1.1;" id="amountInWords">
+                    <!-- Amount in words will be displayed here -->
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        let logoData = '';
+        
+        // Logo upload handler
+        document.getElementById('logoInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    logoData = e.target.result;
+                    document.getElementById('logoDisplay').src = logoData;
+                    document.getElementById('logoDisplay').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Add new item row
+        function addItem() {
+            const itemsList = document.getElementById('itemsList');
+            const newRow = document.createElement('div');
+            newRow.className = 'item-row';
+            newRow.innerHTML = `
+                <input type="text" class="item-name" placeholder="Item name">
+                <input type="number" class="item-qty" value="1" min="1" step="0.01">
+                <input type="number" class="item-price-excl" value="0.00" step="0.01">
+                <input type="number" class="item-gst-percent" value="18" step="0.01">
+                <input type="number" class="item-gst-amount" readonly>
+                <input type="number" class="item-price-incl" readonly>
+                <input type="number" class="item-total" readonly>
+            `;
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.onclick = () => removeItem(removeBtn);
+            removeBtn.style.cssText = 'background: #dc3545; color: white; border: none; padding: 4px 6px; font-size: 12px; cursor: pointer;';
+            newRow.appendChild(removeBtn);
+            itemsList.appendChild(newRow);
+            attachItemListeners(newRow);
+        }
+        
+        // Remove item
+        function removeItem(btn) {
+            btn.parentElement.remove();
+            generateReceipt();
+        }
+        
+        // Attach listeners to item inputs
+        function attachItemListeners(row) {
+            const qtyInput = row.querySelector('.item-qty');
+            const priceExclInput = row.querySelector('.item-price-excl');
+            const gstPercentInput = row.querySelector('.item-gst-percent');
+            const gstAmountInput = row.querySelector('.item-gst-amount');
+            const priceInclInput = row.querySelector('.item-price-incl');
+            const totalInput = row.querySelector('.item-total');
+            
+            function updateCalculations() {
+                const qty = parseFloat(qtyInput.value) || 0;
+                const priceExcl = parseFloat(priceExclInput.value) || 0;
+                const gstPercent = parseFloat(gstPercentInput.value) || 0;
+                
+                const gstAmount = (priceExcl * gstPercent) / 100;
+                const priceIncl = priceExcl + gstAmount;
+                const total = qty * priceIncl;
+                
+                gstAmountInput.value = gstAmount.toFixed(2);
+                priceInclInput.value = priceIncl.toFixed(2);
+                totalInput.value = total.toFixed(2);
+                
+                generateReceipt();
+            }
+            
+            qtyInput.addEventListener('input', updateCalculations);
+            priceExclInput.addEventListener('input', updateCalculations);
+            gstPercentInput.addEventListener('input', updateCalculations);
+            updateCalculations();
+        }
+        
+        // Initialize existing item listeners
+        document.querySelectorAll('.item-row').forEach(attachItemListeners);
+        
+        // Generate receipt
+        function generateReceipt() {
+            // Update store info
+            document.getElementById('storeNameDisplay').textContent = document.getElementById('storeName').value;
+            document.getElementById('storeContactDisplay').textContent = document.getElementById('storeContact').value;
+            document.getElementById('ntnDisplay').textContent = document.getElementById('ntnNumber').value;
+            document.getElementById('strnDisplay').textContent = document.getElementById('strnNumber').value;
+            document.getElementById('cashierDisplay').textContent = document.getElementById('cashier').value;
+            document.getElementById('shiftDisplay').textContent = document.getElementById('shift').value;
+            document.getElementById('terminalDisplay').textContent = document.getElementById('terminal').value;
+            document.getElementById('netDisplay').textContent = document.getElementById('net').value;
+            
+            // Update date/time
+            const dateInput = document.getElementById('receiptDate').value;
+            const timeInput = document.getElementById('receiptTime').value;
+            
+            let dateStr, timeStr;
+            
+            if (dateInput) {
+                const date = new Date(dateInput);
+                dateStr = date.getDate().toString().padStart(2, '0') + ' ' + 
+                         date.toLocaleDateString('en-US', { month: 'short' }) + ' ' + 
+                         date.getFullYear();
+            } else {
+                const now = new Date();
+                dateStr = now.getDate().toString().padStart(2, '0') + ' ' + 
+                         now.toLocaleDateString('en-US', { month: 'short' }) + ' ' + 
+                         now.getFullYear();
+            }
+            
+            if (timeInput) {
+                const [hours, minutes] = timeInput.split(':');
+                const time = new Date();
+                time.setHours(hours, minutes);
+                timeStr = time.toLocaleTimeString('en-GB', {hour12: true});
+            } else {
+                const now = new Date();
+                timeStr = now.toLocaleTimeString('en-GB', {hour12: true});
+            }
+            
+            document.getElementById('billDate').textContent = dateStr;
+            document.getElementById('billTime').textContent = timeStr;
+            
+            // Process items
+            const itemRows = document.querySelectorAll('.item-row');
+            let itemsHTML = '';
+            let subtotal = 0;
+            
+            itemRows.forEach(row => {
+                const name = row.querySelector('.item-name').value;
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const priceExcl = parseFloat(row.querySelector('.item-price-excl').value) || 0;
+                const gstPercent = parseFloat(row.querySelector('.item-gst-percent').value) || 0;
+                const gstAmount = parseFloat(row.querySelector('.item-gst-amount').value) || 0;
+                const priceIncl = parseFloat(row.querySelector('.item-price-incl').value) || 0;
+                const totalAmount = parseFloat(row.querySelector('.item-total').value) || 0;
+                
+                if (name && qty > 0 && priceExcl > 0) {
+                    itemsHTML += `
+                        <div style="font-weight: bold; font-size: 9px; margin: 3px 0 1px 0;">${name.toUpperCase()}</div>
+                        <div class="item-line">
+                            <div>${qty.toFixed(2)}</div>
+                            <div>${priceExcl.toFixed(2)}</div>
+                            <div>${gstPercent.toFixed(2)}</div>
+                            <div>${gstAmount.toFixed(2)}</div>
+                            <div>${priceIncl.toFixed(2)}</div>
+                            <div>${totalAmount.toFixed(1)}</div>
+                        </div>
+                        <div style="font-size: 8px; margin: 2px 0;">........................................................................................................................</div>
+                    `;
+                    subtotal += totalAmount;
+                }
+            });
+            
+            document.getElementById('itemsDisplay').innerHTML = itemsHTML;
+            
+            // Calculate totals
+            let totalGst = 0;
+            let totalExclGst = 0;
+            let itemCount = 0;
+            let totalQty = 0;
+            
+            itemRows.forEach(row => {
+                const name = row.querySelector('.item-name').value;
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const priceExcl = parseFloat(row.querySelector('.item-price-excl').value) || 0;
+                const gstAmount = parseFloat(row.querySelector('.item-gst-amount').value) || 0;
+                
+                if (name && qty > 0 && priceExcl > 0) {
+                    totalExclGst += qty * priceExcl;
+                    totalGst += qty * gstAmount;
+                    totalQty += qty;
+                    itemCount++;
+                }
+            });
+            
+            const subTotal = totalExclGst + totalGst;
+            const grandTotal = subTotal;
+            
+            document.getElementById('totalExcl').textContent = totalExclGst.toFixed(2);
+            document.getElementById('gstTotal').textContent = totalGst.toFixed(2);
+            document.getElementById('itemCount').textContent = totalQty.toFixed(0);
+            document.getElementById('subTotal').textContent = subTotal.toFixed(2);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+            document.getElementById('paymentCash').textContent = grandTotal.toFixed(2);
+            document.getElementById('change').textContent = '0.00';
+            
+            // Convert amount to words
+            const amountInWords = convertToWords(Math.floor(grandTotal));
+            document.getElementById('amountInWords').textContent = amountInWords.toUpperCase();
+        }
+        
+        // Print receipt
+        function printReceipt() {
+            window.print();
+        }
+        
+        // Convert number to words
+        function convertToWords(num) {
+            const ones = ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'];
+            const teens = ['TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN'];
+            const tens = ['', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY'];
+            
+            if (num === 0) return 'ZERO';
+            
+            let words = '';
+            
+            if (num >= 100000) {
+                const lakhs = Math.floor(num / 100000);
+                words += convertToWords(lakhs) + ' LAKH ';
+                num %= 100000;
+            }
+            
+            if (num >= 1000) {
+                const thousands = Math.floor(num / 1000);
+                words += convertToWords(thousands) + ' THOUSAND ';
+                num %= 1000;
+            }
+            
+            if (num >= 100) {
+                words += ones[Math.floor(num / 100)] + ' HUNDRED ';
+                num %= 100;
+            }
+            
+            if (num >= 20) {
+                words += tens[Math.floor(num / 10)] + ' ';
+                num %= 10;
+            } else if (num >= 10) {
+                words += teens[num - 10] + ' ';
+                num = 0;
+            }
+            
+            if (num > 0) {
+                words += ones[num] + ' ';
+            }
+            
+            return words.trim() + ' ONLY';
+        }
+        
+        // Real-time clock update
+        function updateClock() {
+            if (!document.getElementById('receiptDate').value && !document.getElementById('receiptTime').value) {
+                generateReceipt();
+            }
+        }
+        
+        // Update clock every second
+        setInterval(updateClock, 1000);
+        
+        // Add event listeners for date/time inputs
+        document.getElementById('receiptDate').addEventListener('change', generateReceipt);
+        document.getElementById('receiptTime').addEventListener('change', generateReceipt);
+        
+        // Initialize
+        generateReceipt();
+    </script>
+</body>
+</html>
