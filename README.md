@@ -24,8 +24,8 @@ A React-based receipt generator application that creates professional-looking re
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/receipt-generator.git
-cd receipt-generator
+git clone https://github.com/Hamzakhan55/Recipts_Generator.git
+cd Recipts_Generator
 ```
 
 2. Install dependencies:
