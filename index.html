@@ -4,61 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <script>
+        window.location.href = 'thermal-receipt.html';
+    </script>
 </head>
 <body>
-    <div class="container">
-        <div class="form-section">
-            <h2>Receipt Generator</h2>
-            
-            <div class="form-group">
-                <label>Store Logo:</label>
-                <input type="file" id="logoInput" accept="image/*">
-            </div>
-            
-            <div class="form-group">
-                <label>Store Name:</label>
-                <input type="text" id="storeName" placeholder="Enter store name">
-            </div>
-            
-            <div class="form-group">
-                <label>Store Address:</label>
-                <textarea id="storeAddress" placeholder="Enter store address"></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label>Receipt Number:</label>
-                <input type="text" id="receiptNumber" placeholder="Receipt #">
-            </div>
-            
-            <div class="items-section">
-                <h3>Items</h3>
-                <div id="itemsList">
-                    <div class="item-row">
-                        <input type="text" placeholder="Item name" class="item-name">
-                        <input type="number" placeholder="Qty" class="item-qty" step="1">
-                        <input type="number" placeholder="Price" class="item-price" step="0.01">
-                    </div>
-                </div>
-                <button type="button" onclick="addItem()">Add Item</button>
-            </div>
-            
-            <div class="form-group">
-                <label>Tax Rate (%):</label>
-                <input type="number" id="taxRate" value="0" step="0.01">
-            </div>
-            
-            <button onclick="generateReceipt()">Generate Receipt</button>
-        </div>
-        
-        <div class="receipt-section">
-            <div id="receipt" class="receipt">
-                <!-- Receipt will be generated here -->
-            </div>
-            <button onclick="printReceipt()" id="printBtn" style="display:none;">Print Receipt</button>
-        </div>
-    </div>
-    
-    <script src="script.js"></script>
+    <p>Redirecting to Receipt Generator...</p>
 </body>
 </html>

@@ -1,62 +1,34 @@
-# Receipt Generator
+# Thermal Receipt Generator
 
-A React-based receipt generator application that creates professional-looking receipts.
+A professional thermal receipt generator that creates authentic-looking receipts with GST calculations.
 
 ## Features
 
-- Generate custom receipts
 - Professional thermal receipt format
-- Easy-to-use interface
-- Responsive design
+- GST calculation and display
+- Logo upload support
+- Real-time calculations
+- Print functionality
+- Amount in words conversion
 
-## Live Demo
+## Usage
 
-🚀 [View Live Demo](https://your-app-name.vercel.app)
+Simply open `thermal-receipt.html` in any web browser or run:
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/Hamzakhan55/Recipts_Generator.git
-cd Recipts_Generator
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
 ```bash
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-## Build for Production
-
-```bash
-npm run build
-```
-
 ## Deployment
 
-This app is deployed on Vercel. Any push to the main branch will automatically trigger a new deployment.
+Deploy the `thermal-receipt.html` file to any static hosting service like:
+- Vercel
+- Netlify  
+- GitHub Pages
+- Any web server
 
-## Technologies Used
+The application is completely self-contained with no dependencies.
 
-- React 18
-- HTML5
-- CSS3
-- JavaScript ES6+
+## Live Demo
 
-## License
-
-This project is open source and available under the [MIT License](LICENSE).
+🚀 [View Live Demo](https://your-app-name.vercel.app)

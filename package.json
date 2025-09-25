@@ -1,18 +1,13 @@
 {
-  "name": "receipt-generator",
+  "name": "thermal-receipt-generator",
   "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
-  },
+  "description": "Professional thermal receipt generator",
+  "main": "thermal-receipt.html",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+    "start": "start thermal-receipt.html",
+    "dev": "start thermal-receipt.html"
   },
-  "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
-  }
+  "keywords": ["receipt", "thermal", "generator", "pos"],
+  "author": "",
+  "license": "MIT"
 }
